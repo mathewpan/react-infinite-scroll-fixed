@@ -1,12 +1,5 @@
 var ReactDOM = require('react-dom');
 
-function topPosition(domElt) {
-  if (!domElt) {
-    return 0;
-  }
-  return domElt.offsetTop + topPosition(domElt.offsetParent);
-}
-
 module.exports = function (React) {
   if (React.addons && React.addons.InfiniteScroll) {
     return React.addons.InfiniteScroll;
@@ -33,9 +26,9 @@ module.exports = function (React) {
       return React.DOM.div(null, props.children, props.hasMore && (props.loader || InfiniteScroll._defaultLoader));
     },
     scrollListener: function () {
-      var el = ReactDOM.findDOMNode(this);
-      var scrollTop = (window.pageYOffset !== undefined) ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
-      if (topPosition(el) + el.offsetHeight - scrollTop - window.innerHeight < Number(this.props.threshold)) {
+      var element = ReactDOM.findDOMNode(this).parentNode;
+      var position = element.scrollHeight - element.scrollTop - window.innerHeight;
+      if (position < Number(this.props.threshold)) {
         this.detachScrollListener();
         // call loadMore after detachScrollListener to allow
         // for non-async loadMore functions
@@ -46,13 +39,15 @@ module.exports = function (React) {
       if (!this.props.hasMore) {
         return;
       }
-      window.addEventListener('scroll', this.scrollListener);
-      window.addEventListener('resize', this.scrollListener);
+      var element = ReactDOM.findDOMNode(this).parentNode;
+      element.addEventListener('scroll', this.scrollListener);
+      element.addEventListener('resize', this.scrollListener);
       this.scrollListener();
     },
     detachScrollListener: function () {
-      window.removeEventListener('scroll', this.scrollListener);
-      window.removeEventListener('resize', this.scrollListener);
+      var element = ReactDOM.findDOMNode(this).parentNode;
+      element.removeEventListener('scroll', this.scrollListener);
+      element.removeEventListener('resize', this.scrollListener);
     },
     componentWillUnmount: function () {
       this.detachScrollListener();
